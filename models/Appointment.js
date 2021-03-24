@@ -9,6 +9,12 @@ const appointmentSchema = Schema(
     patient: { type: Schema.Types.ObjectId, required: true },
     date: { type: Date, required: true },
     slot: { type: Number, required: true },
+    status: {
+      type: String,
+      required: true,
+      enum: ["request", "accepted", "cancel", "completed"],
+      default: "request",
+    },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamp: true }

@@ -17,7 +17,7 @@ const doctorSchema = Schema(
     appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "doctor" },
     timeslots: {
-      timeslot1: { date: { type: Date }, slot: [{ type: Number }] }, // {date:"23/3", slot:[1,2,3,4,5,]}
+      timeslot1: { date: { type: Date }, slot: [{ type: Number }] }, // timeslot1: {date:"23/3", slot:[1,2,3,4,5,]}
       timeslot2: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot3: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot4: { date: { type: Date }, slot: [{ type: Number }] },
@@ -25,6 +25,14 @@ const doctorSchema = Schema(
       timeslot6: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot7: { date: { type: Date }, slot: [{ type: Number }] },
     },
+    profile: {
+      gender: { type: String, enum: ["male", "female", "other"] },
+      degree: { type: String, required: true, default: "none" },
+      address: { type: String, required: true, default: "none" },
+      about: { type: String, required: true, default: "none" },
+    },
+    specialization: { type: Schema.Types.ObjectId, ref: "Specialization" },
+    reviews: { type: Schema.Types.ObjectId, ref: "Review" },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamp: true }

@@ -6,9 +6,14 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const patientSchema = Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, requried: true, unique: true },
-    phone: { type: Number, required: false },
-    password: { type: String, required: true },
+    dob: { type: Date, required: true },
+    gender: { type: String, enum: ["male", "female", "other"], required: true },
+    parent: {
+      name: { type: String, required: true },
+      phone: { type: Number, required: true },
+      email: { type: String, requried: true, unique: true },
+      password: { type: String, required: true },
+    },
     imageUrl: {
       type: String,
       default:
