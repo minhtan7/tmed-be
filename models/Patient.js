@@ -14,9 +14,8 @@ const patientSchema = Schema(
       default:
         "https://i.picsum.photos/id/614/300/300.jpg?hmac=E2RgPRyVruvw4rXcrM6nY2bwwKPUvnU7ZwXSSiP95JE",
     },
-    appoitments: { type: Schema.Types.ObjectId, ref: "Appointment" },
+    appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "patient" },
-    timeslot: {},
     isDeleted: { type: Boolean, default: false },
   },
   { timestamp: true }

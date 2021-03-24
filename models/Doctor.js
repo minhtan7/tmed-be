@@ -14,9 +14,17 @@ const doctorSchema = Schema(
       default:
         "https://i.picsum.photos/id/614/300/300.jpg?hmac=E2RgPRyVruvw4rXcrM6nY2bwwKPUvnU7ZwXSSiP95JE",
     },
-    appoitments: { type: Schema.Types.ObjectId, ref: "Appointment" },
+    appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "doctor" },
-    timeslot: {},
+    timeslots: {
+      timeslot1: { date: { type: Date }, slot: [{ type: Number }] }, // {date:"23/3", slot:[1,2,3,4,5,]}
+      timeslot2: { date: { type: Date }, slot: [{ type: Number }] },
+      timeslot3: { date: { type: Date }, slot: [{ type: Number }] },
+      timeslot4: { date: { type: Date }, slot: [{ type: Number }] },
+      timeslot5: { date: { type: Date }, slot: [{ type: Number }] },
+      timeslot6: { date: { type: Date }, slot: [{ type: Number }] },
+      timeslot7: { date: { type: Date }, slot: [{ type: Number }] },
+    },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamp: true }
