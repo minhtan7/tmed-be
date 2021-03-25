@@ -6,13 +6,13 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const appointmentSchema = Schema(
   {
     doctor: { type: Schema.Types.ObjectId, required: true },
-    patient: { type: Schema.Types.ObjectId, required: true },
+    patient: { type: Schema.Types.ObjectId },
     date: { type: Date, required: true },
     slot: { type: Number, required: true },
     status: {
       type: String,
       required: true,
-      enum: ["request", "accepted", "cancel", "completed"],
+      enum: ["request", "accepted", "cancel", "completed", "dOff"],
       default: "request",
     },
     isDeleted: { type: Boolean, default: false },

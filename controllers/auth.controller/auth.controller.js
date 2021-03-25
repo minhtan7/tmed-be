@@ -7,14 +7,13 @@ const authController = {};
 authController.login = async (req, res, next) => {
   try {
     let { email, password } = req.body;
-    console.log(email, password);
-    let patient = await Patient.findOne({ email });
+    let patient = await Patient.findOne({ "parent.email": email });
     let doctor = await Doctor.findOne({ email });
     console.log("p", patient);
     console.log("d", doctor);
     if (!patient && !doctor) return next(new Error("401 - User not exits"));
     if (patient) {
-      const isMatch = await bcrypt.compare(password, patient.password);
+      const isMatch = await bcrypt.compare(password, patient.parent.password);
       if (!isMatch) return next(new Error("401 - Email or password is wrong"));
 
       const accessToken = await patient.generateToken();
@@ -47,10 +46,12 @@ authController.login = async (req, res, next) => {
 
 authController.register = async (req, res, next) => {
   try {
-    let { name, email, password, phone, role } = req.body;
-    if (role === "patient") {
+    if (req.body.role === "patient") {
+      let { name, dob, gender, parent } = req.body;
+      let { email, phone, password, parentName } = parent;
       let patient = await Patient.findOne({ email, phone });
-      if (patient)
+      let doctor = await Doctor.findOne({ email, phone });
+      if (patient || doctor)
         return next(new Error("401 - Email or Phone number already exits"));
 
       const salt = await bcrypt.genSalt(10);
@@ -58,9 +59,9 @@ authController.register = async (req, res, next) => {
 
       patient = await Patient.create({
         name,
-        email,
-        password,
-        phone,
+        dob,
+        gender,
+        parent: { parentName, phone, email, password },
       });
       const accessToken = await patient.generateToken();
       utilsHelper.sendResponse(
@@ -72,9 +73,12 @@ authController.register = async (req, res, next) => {
         "Register successfully"
       );
     } else {
+      let { name, email, password, phone, specialization } = req.body;
       let doctor = await Doctor.findOne({ email, phone });
-      if (doctor)
-        return next(new Error("401 - Email or Phone number already exits"));
+      let patient = await Patient.findOne({ "parent.email": email });
+      console.log("patient:", patient);
+      if (doctor || patient)
+        return next(new Error("401 - Email already exits"));
 
       const salt = await bcrypt.genSalt(10);
       password = await bcrypt.hash(password, salt);
@@ -84,6 +88,7 @@ authController.register = async (req, res, next) => {
         email,
         password,
         phone,
+        specialization,
       });
       const accessToken = await doctor.generateToken();
       utilsHelper.sendResponse(

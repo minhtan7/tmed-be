@@ -14,9 +14,10 @@ const doctorSchema = Schema(
       default:
         "https://i.picsum.photos/id/614/300/300.jpg?hmac=E2RgPRyVruvw4rXcrM6nY2bwwKPUvnU7ZwXSSiP95JE",
     },
+    balance: { type: Number, default: 0 },
     appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "doctor" },
-    timeslots: {
+    /* timeslots: {
       timeslot1: { date: { type: Date }, slot: [{ type: Number }] }, // timeslot1: {date:"23/3", slot:[1,2,3,4,5,]}
       timeslot2: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot3: { date: { type: Date }, slot: [{ type: Number }] },
@@ -24,28 +25,34 @@ const doctorSchema = Schema(
       timeslot5: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot6: { date: { type: Date }, slot: [{ type: Number }] },
       timeslot7: { date: { type: Date }, slot: [{ type: Number }] },
-    },
+    }, */
     profile: {
       gender: { type: String, enum: ["male", "female", "other"] },
       degree: { type: String, required: true, default: "none" },
       address: { type: String, required: true, default: "none" },
       about: { type: String, required: true, default: "none" },
     },
-    specialization: { type: Schema.Types.ObjectId, ref: "Specialization" },
+    specialization: {
+      type: Schema.Types.ObjectId,
+      ref: "Specialization",
+      required: true,
+    },
     reviews: { type: Schema.Types.ObjectId, ref: "Review" },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamp: true }
 );
-/* 
+
 doctorSchema.methods.toJSON = function () {
   const obj = this._doc;
   delete obj.password;
   delete obj.emailVerified;
   delete obj.emailVerificationCode;
   delete obj.isDeleted;
+  delete obj.balance;
+  delete obj.role;
   return obj;
-}; */
+};
 
 doctorSchema.methods.generateToken = async function () {
   const accessToken = await jwt.sign({ _id: this._id }, JWT_SECRET_KEY, {

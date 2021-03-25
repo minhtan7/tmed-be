@@ -6,14 +6,16 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const patientSchema = Schema(
   {
     name: { type: String, required: true },
-    dob: { type: Date, required: true },
+    dob: { type: Object, required: true },
     gender: { type: String, enum: ["male", "female", "other"], required: true },
     parent: {
-      name: { type: String, required: true },
+      parentName: { type: String, required: true },
       phone: { type: Number, required: true },
       email: { type: String, requried: true, unique: true },
       password: { type: String, required: true },
     },
+    balance: { type: Number, default: 0 },
+    reviews: { type: Schema.Types.ObjectId, ref: "Review" },
     imageUrl: {
       type: String,
       default:
@@ -25,7 +27,7 @@ const patientSchema = Schema(
   },
   { timestamp: true }
 );
-/* 
+
 patientSchema.methods.toJSON = function () {
   const obj = this._doc;
   delete obj.password;
@@ -33,7 +35,7 @@ patientSchema.methods.toJSON = function () {
   delete obj.emailVerificationCode;
   delete obj.isDeleted;
   return obj;
-}; */
+};
 
 patientSchema.methods.generateToken = async function () {
   const accessToken = await jwt.sign({ _id: this._id }, JWT_SECRET_KEY, {

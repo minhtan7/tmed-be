@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const Order = require("../../models/Order");
+
 const utilsHelper = require("../../helpers/utils.helper");
 const Patient = require("../../models/Patient");
 
@@ -27,12 +27,24 @@ patientController.getCurrentPatient = async (req, res, next) => {
 patientController.updateCurrentPatient = async (req, res, next) => {
   try {
     const patientId = req.userId;
-    let { name, email, password, phone, imageUrl } = req.body;
+    let { name, dob, gender, parent, imageUrl } = req.body;
+    let { parentName, phone, email, password } = parent;
+    console.log(parentName);
     let patient = await User.findById(patientId);
     if (!patient) return next(new Error("401 - User not found"));
+
+    const salt = await bcrypt.genSalt(10);
+    password = await bcrypt.hash(password, salt);
+
     patient = await User.findByIdAndUpdate(
       patientId,
-      { name, email, password, role, phone, imageUrl },
+      {
+        name,
+        dob,
+        gender,
+        imageUrl,
+        parent: { parentName, phone, email, password },
+      },
       { new: true }
     );
     utilsHelper.sendResponse(res, 200, true, { patient }, "Profile updated");
@@ -71,13 +83,7 @@ patientController.updatePatient = async (req, res, next) => {
       { name, email, password, role, phone, imageUrl },
       { new: true }
     );
-    utilsHelper.sendResponse(
-      res,
-      200,
-      true,
-      { patient },
-      `Update ${patient.name} profile`
-    );
+    utilsHelper.sendResponse(res, 200, true, { patient }, `Update profile`);
   } catch (err) {
     next(err);
   }

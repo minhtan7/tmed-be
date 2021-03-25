@@ -9,20 +9,16 @@ router.use("/users", userApi); */
 const authApi = require("./auth.api");
 router.use("/auth", authApi);
 
-/* // productApi
-const productApi = require("./product.api");
-router.use("/products", productApi);
+// doctorApi
+const doctorApi = require("./doctor.api");
+router.use("/doctor", doctorApi);
 
-//orderApi
-const orderApi = require("./order.api");
-router.use("/order", orderApi);
+// patientApi
+const patientApi = require("./patient.api");
+router.use("/patient", patientApi);
 
-//categoryApi
-const categoryApi = require("./category.api");
-router.use("/category", categoryApi);
-
-//reviewApi
+// reviewApi
 const reviewApi = require("./review.api");
-router.use("/review", reviewApi); */
+router.use("/review", reviewApi);
 
 module.exports = router;
