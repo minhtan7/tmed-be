@@ -2,43 +2,55 @@ const utilsHelper = require("../../helpers/utils.helper");
 const Patient = require("../../models/Patient");
 const bcrypt = require("bcryptjs");
 const Doctor = require("../../models/Doctor");
+const Admin = require("../../models/Admin");
 
 const authController = {};
-authController.login = async (req, res, next) => {
+authController.login = async ({ user }, res, next) => {
   try {
-    let { email, password } = req.body;
-    let patient = await Patient.findOne({ "parent.email": email });
-    let doctor = await Doctor.findOne({ email });
-    console.log("p", patient);
-    console.log("d", doctor);
-    if (!patient && !doctor) return next(new Error("401 - User not exits"));
-    if (patient) {
-      const isMatch = await bcrypt.compare(password, patient.parent.password);
-      if (!isMatch) return next(new Error("401 - Email or password is wrong"));
-
-      const accessToken = await patient.generateToken();
-      utilsHelper.sendResponse(
-        res,
-        200,
-        true,
-        { patient, accessToken },
-        null,
-        "Login successfully"
-      );
-    } else {
-      const isMatch = await bcrypt.compare(password, doctor.password);
-      if (!isMatch) return next(new Error("401 - Email or password is wrong"));
-
-      const accessToken = await doctor.generateToken();
-      utilsHelper.sendResponse(
-        res,
-        200,
-        true,
-        { doctor, accessToken },
-        null,
-        "Login successfully"
-      );
-    }
+    if (user) {
+      if (user.role === "patient") {
+        const patient = await Patient.findByIdAndUpdate(
+          user._id,
+          { avatarUrl: user.avatarUrl },
+          { new: true }
+        );
+        const accessToken = await patient.generateToken();
+        utilsHelper.sendResponse(
+          res,
+          200,
+          true,
+          { patient, accessToken },
+          null,
+          "Login successfully"
+        );
+      } else if (user.role === "doctor") {
+        const doctor = await Doctor.findByIdAndUpdate(
+          user._id,
+          { avatarUrl: user.avatarUrl },
+          { new: true }
+        );
+        const accessToken = await doctor.generateToken();
+        utilsHelper.sendResponse(
+          res,
+          200,
+          true,
+          { doctor, accessToken },
+          null,
+          "Login successfully"
+        );
+      } else if (user.role === "admin") {
+        const admin = await Admin.find();
+        const accessToken = await admin.generateToken();
+        utilsHelper.sendResponse(
+          res,
+          200,
+          true,
+          { admin, accessToken },
+          null,
+          "Login successfully"
+        );
+      }
+    } else return next(new Error("401 - Incorrect username of password"));
   } catch (err) {
     next(err);
   }
@@ -46,22 +58,20 @@ authController.login = async (req, res, next) => {
 
 authController.register = async (req, res, next) => {
   try {
-    if (req.body.role === "patient") {
-      let { name, dob, gender, parent } = req.body;
-      let { email, phone, password, parentName } = parent;
-      let patient = await Patient.findOne({ email, phone });
-      let doctor = await Doctor.findOne({ email, phone });
-      if (patient || doctor)
-        return next(new Error("401 - Email or Phone number already exits"));
+    let { name, email, password, phone } = req.body;
+    let doctor = await Doctor.findOne({ email });
+    let patient = await Patient.findOne({ email });
+    if (doctor || patient) return next(new Error("401 - Email already exits"));
 
+    if (req.body.role === "patient") {
       const salt = await bcrypt.genSalt(10);
       password = await bcrypt.hash(password, salt);
 
       patient = await Patient.create({
-        name,
-        dob,
-        gender,
-        parent: { parentName, phone, email, password },
+        parentName: name,
+        phone,
+        email,
+        password,
       });
       const accessToken = await patient.generateToken();
       utilsHelper.sendResponse(
@@ -73,13 +83,6 @@ authController.register = async (req, res, next) => {
         "Register successfully"
       );
     } else {
-      let { name, email, password, phone, specialization } = req.body;
-      let doctor = await Doctor.findOne({ email, phone });
-      let patient = await Patient.findOne({ "parent.email": email });
-      console.log("patient:", patient);
-      if (doctor || patient)
-        return next(new Error("401 - Email already exits"));
-
       const salt = await bcrypt.genSalt(10);
       password = await bcrypt.hash(password, salt);
 
@@ -88,7 +91,6 @@ authController.register = async (req, res, next) => {
         email,
         password,
         phone,
-        specialization,
       });
       const accessToken = await doctor.generateToken();
       utilsHelper.sendResponse(
@@ -100,6 +102,29 @@ authController.register = async (req, res, next) => {
         "Register successfully"
       );
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+authController.registerAdmin = async (req, res, next) => {
+  try {
+    let { name, email, password } = req.body;
+
+    const salt = await bcrypt.genSalt(10);
+    password = await bcrypt.hash(password, salt);
+
+    const admin = await Admin.create({ name, email, password });
+
+    const accessToken = await admin.generateToken();
+    utilsHelper.sendResponse(
+      res,
+      200,
+      true,
+      { admin, accessToken },
+      null,
+      "Register successfully"
+    );
   } catch (err) {
     next(err);
   }

@@ -1,5 +1,5 @@
 const Specialization = require("../../models/Specialization");
-const utilsHelper = require("../helpers/utils.helper");
+const utilsHelper = require("../../helpers/utils.helper");
 
 const specializationController = {};
 
@@ -19,6 +19,24 @@ specializationController.addCategory = async (req, res, next) => {
       { specialization },
       null,
       "Specialization created"
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+specializationController.getAllSpecialization = async (req, res, next) => {
+  try {
+    let specializations = await Specialization.find();
+    if (!specializations)
+      return next(new Error("401 - Specialization not found"));
+    utilsHelper.sendResponse(
+      res,
+      200,
+      true,
+      { specializations },
+      null,
+      "Get all Specialization"
     );
   } catch (err) {
     next(err);

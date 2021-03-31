@@ -47,7 +47,9 @@ authMiddleware.doctorRequired = async (req, res, next) => {
 authMiddleware.patientRequired = async (req, res, next) => {
   try {
     const userId = req.userId;
+    console.log(userId);
     const currentUser = await Patient.findById(userId);
+    console.log(currentUser);
     const isPatient = currentUser.role === "patient";
 
     if (!isPatient) return next(new Error("401 - You are not authorized"));

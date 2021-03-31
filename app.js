@@ -4,9 +4,11 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const passport = require("passport");
 require("dotenv").config();
-
+require("./middlewares/passport");
 const mongoURI = process.env.MONGODB_URI;
+const moment = require("moment");
 
 var indexRouter = require("./routes/index");
 const utilsHelper = require("./helpers/utils.helper");
@@ -30,6 +32,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cors());
+app.use(passport.initialize());
+app.get("/api/config/paypal", (req, res) =>
+  res.send(process.env.PAYPAL_CLIENT_ID)
+);
 
 //Initialize routes
 app.use("/api", indexRouter);

@@ -5,19 +5,23 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 const appointmentSchema = Schema(
   {
-    doctor: { type: Schema.Types.ObjectId, required: true },
-    patient: { type: Schema.Types.ObjectId },
-    date: { type: Date, required: true },
-    slot: { type: Number, required: true },
+    doctor: { type: Schema.Types.ObjectId, ref: "Doctor", required: true },
+    patient: {
+      type: Schema.Types.ObjectId,
+      ref: "Patient",
+    },
+    date: { type: String, required: true },
+    slot: { type: Number, min: 0, max: 17, required: true },
     status: {
       type: String,
       required: true,
-      enum: ["request", "accepted", "cancel", "completed", "dOff"],
+      enum: ["request", "accepted", "completed", "cancel", "unavailable"],
       default: "request",
     },
+    isPaid: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 /* appointmentSchema.plugin(require("./plugins/isDeletedFalse")); */

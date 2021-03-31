@@ -41,10 +41,6 @@ router.get(
  * @description Guess can get product by id
  * @access Login required
  */
-router.get(
-  "/:id",
-  authMiddleware.loginRequired,
-  doctorController.getSingleDoctor
-);
+router.get("/:id", doctorController.getSingleDoctor);
 
 module.exports = router;

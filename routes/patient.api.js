@@ -23,6 +23,7 @@ router.get(
 router.put(
   "/me",
   authMiddleware.loginRequired,
+  authMiddleware.patientRequired,
   patientController.updateCurrentPatient
 );
 

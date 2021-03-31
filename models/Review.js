@@ -10,7 +10,7 @@ const reviewSchema = Schema(
     body: String,
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 reviewSchema.plugin(require("./plugins/isDeletedFalse"));
 

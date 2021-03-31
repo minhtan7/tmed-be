@@ -21,4 +21,12 @@ router.use("/patient", patientApi);
 const reviewApi = require("./review.api");
 router.use("/review", reviewApi);
 
+//specializationApi
+const specializationApi = require("./specialization.api");
+router.use("/specialization", specializationApi);
+
+//appointmentAPI
+const appointmentApi = require("./appointment.api");
+router.use("/appointment", appointmentApi);
+
 module.exports = router;

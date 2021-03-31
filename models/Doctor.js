@@ -9,25 +9,20 @@ const doctorSchema = Schema(
     email: { type: String, requried: true, unique: true },
     phone: { type: Number, required: false },
     password: { type: String, required: true },
-    imageUrl: {
+    avatarUrl: {
       type: String,
       default:
         "https://i.picsum.photos/id/614/300/300.jpg?hmac=E2RgPRyVruvw4rXcrM6nY2bwwKPUvnU7ZwXSSiP95JE",
     },
     balance: { type: Number, default: 0 },
-    appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
+    appointments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "doctor" },
-    /* timeslots: {
-      timeslot1: { date: { type: Date }, slot: [{ type: Number }] }, // timeslot1: {date:"23/3", slot:[1,2,3,4,5,]}
-      timeslot2: { date: { type: Date }, slot: [{ type: Number }] },
-      timeslot3: { date: { type: Date }, slot: [{ type: Number }] },
-      timeslot4: { date: { type: Date }, slot: [{ type: Number }] },
-      timeslot5: { date: { type: Date }, slot: [{ type: Number }] },
-      timeslot6: { date: { type: Date }, slot: [{ type: Number }] },
-      timeslot7: { date: { type: Date }, slot: [{ type: Number }] },
-    }, */
     profile: {
-      gender: { type: String, enum: ["male", "female", "other"] },
+      gender: {
+        type: String,
+        enum: ["male", "female"],
+        default: "female",
+      },
       degree: { type: String, required: true, default: "none" },
       address: { type: String, required: true, default: "none" },
       about: { type: String, required: true, default: "none" },
@@ -36,11 +31,12 @@ const doctorSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: "Specialization",
       required: true,
+      default: "605d9e93257db45ebda2b52f",
     },
-    reviews: { type: Schema.Types.ObjectId, ref: "Review" },
+    reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 doctorSchema.methods.toJSON = function () {
@@ -59,6 +55,12 @@ doctorSchema.methods.generateToken = async function () {
     expiresIn: "7d",
   });
   return accessToken;
+};
+
+doctorSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password, function (_, isMatch) {
+    return isMatch;
+  });
 };
 
 /* doctorSchema.plugin(require("./plugins/isDeletedFalse")); */

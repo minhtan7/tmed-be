@@ -2,30 +2,37 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const jwt = require("jsonwebtoken");
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const bcrypt = require("bcryptjs");
 
-const patientSchema = Schema(
+const patientSchema = new Schema(
   {
-    name: { type: String, required: true },
-    dob: { type: Object, required: true },
-    gender: { type: String, enum: ["male", "female", "other"], required: true },
-    parent: {
-      parentName: { type: String, required: true },
-      phone: { type: Number, required: true },
-      email: { type: String, requried: true, unique: true },
-      password: { type: String, required: true },
+    parentName: { type: String, required: true },
+    phone: { type: Number, required: false },
+    email: { type: String, requried: true, unique: true },
+    password: { type: String, required: true },
+
+    children: {
+      childName: { type: String, required: true, default: "none" },
+      dob: { type: String, required: true, default: "none" },
+      gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+        required: true,
+        default: "female",
+      },
     },
     balance: { type: Number, default: 0 },
     reviews: { type: Schema.Types.ObjectId, ref: "Review" },
-    imageUrl: {
+    avatarUrl: {
       type: String,
       default:
         "https://i.picsum.photos/id/614/300/300.jpg?hmac=E2RgPRyVruvw4rXcrM6nY2bwwKPUvnU7ZwXSSiP95JE",
     },
-    appoitments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
+    appointments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
     role: { type: String, default: "patient" },
     isDeleted: { type: Boolean, default: false },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 patientSchema.methods.toJSON = function () {
@@ -42,6 +49,34 @@ patientSchema.methods.generateToken = async function () {
     expiresIn: "7d",
   });
   return accessToken;
+};
+
+patientSchema.statics.findOrCreate = function findOrCreate(profile, cb) {
+  const patientObj = new this(); // create a new User class
+  this.findOne({ email: profile.email }, async function (err, result) {
+    if (!result) {
+      let newPassword =
+        profile.password || "" + Math.floor(Math.random() * 100000000);
+      const salt = await bcrypt.genSalt(10);
+      newPassword = await bcrypt.hash(newPassword, salt);
+
+      patientObj.parentName = profile.name;
+      patientObj.email = profile.email;
+      patientObj.password = newPassword;
+      patientObj.googleId = profile.googleId;
+      patientObj.facebookId = profile.facebookId;
+      patientObj.avatarUrl = profile.avatarUrl;
+      patientObj.save(cb);
+    } else {
+      cb(err, result);
+    }
+  });
+};
+
+patientSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password, function (_, isMatch) {
+    return isMatch;
+  });
 };
 
 /* patientSchema.plugin(require("./plugins/isDeletedFalse")); */

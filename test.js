@@ -1,4 +1,7 @@
 const moment = require("moment");
+const faker = require("faker");
+const fs = require("fs");
+const Appointment = require("./models/Appointment");
 /* orderItems: [
   {
     name: { type: String, required: true },
@@ -29,7 +32,7 @@ let date_ob = new Date();
 let datex = date_ob.getDate();
 let date = ("0" + date_ob.getDate()).slice(-2);
 
-const x = moment([2020, 2, 24]);
+const x = moment([2020, 2, 28]);
 console.log(x);
 const y = moment([2021, 4, 24]);
 const d = x.diff(y, "days"); //the number of different days
@@ -62,3 +65,60 @@ const n = now.toString();
   { $inc: { quantity: -2, "metrics.orders": 1 } }
 )
  */
+
+/* const l = JSON.stringify(now);
+console.log("l", l);
+const ll = JSON.stringify({ appdate: now });
+console.log("ll", ll);
+const lll = `${now}`;
+
+const k = JSON.parse(l);
+const kk = JSON.parse(ll);
+console.log(moment(k.appDate).format());
+console.log(moment(kk).format());
+console.log(moment(lll).format()); */
+/* ---------- */
+
+const nownow = moment().format();
+console.log(nownow);
+/* const ob = { date: `${nownow}` };
+console.log("ob", ob);
+console.log(typeof ob.date);
+console.log(ob.date.format());
+ */
+
+const ran = Math.floor(Math.random() * 10);
+
+const today = moment();
+console.log("today", today.format());
+console.log(today.add(3, "date").format());
+/* console.log((today + 3).format()); */
+for (i = 0; i < 10; i++) {
+  let dates = faker.date.between("2012", "2021");
+  console.log(moment(dates).get("date"));
+  /* console.log(faker.date.between("2015-01-01", "2015-01-05")); */
+}
+
+let sevenDaysAppointments = [];
+const addApp = async () => {
+  for (i = 0; i < 3; i++) {
+    date = moment();
+    const currentDay = date.add(i, "date");
+    console.log("currentDay", currentDay);
+    let appointment = await Appointment.find({ currentDay });
+    sevenDaysAppointments.push(appointment);
+  }
+  console.log(sevenDaysAppointments);
+};
+let currentDay = moment();
+console.log(currentDay);
+for (i = 0; i < 3; i++) {
+  currentDay = currentDay.add(i, "days");
+  console.log(currentDay);
+}
+
+const xx = moment().format("YYYY-MM-DD");
+console.log(typeof xx);
+const yy = moment(xx);
+console.log(yy);
+console.log(faker.image.lorempixel.business());

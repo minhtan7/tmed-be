@@ -6,10 +6,17 @@ const moment = require("moment");
 
 const appointmentController = {};
 
-//Create the order
-appointmentController.requestAppointment = async (req, res, next) => {
+//Create the appointment isPaid false
+appointmentController.requestAppointmentIsPaidFalse = async (
+  req,
+  res,
+  next
+) => {
   try {
-    const { date, slot } = req.body;
+    let { date, slot } = req.body;
+    date = moment(date);
+    if (date.diff(moment(), "days") < 0)
+      return next(new Error("401 - You can not request a previous day!"));
     let patientId = req.userId;
     let doctorId = req.params.id;
     const doctor = await Doctor.findById(doctorId);
@@ -18,10 +25,14 @@ appointmentController.requestAppointment = async (req, res, next) => {
     if (patientId === doctorId) {
       appointment = await Appointment.create({
         doctor: doctorId,
-        date,
+        date: date.format("YYYY-MM-DD"),
         slot,
-        status: "dOff",
+        status: "unavailable",
       });
+      appointment = await appointment
+        .populate("patient")
+        .populate("doctor")
+        .execPopulate();
       await Doctor.findByIdAndUpdate(doctor, {
         $push: { appointments: appointment._id },
       });
@@ -31,28 +42,42 @@ appointmentController.requestAppointment = async (req, res, next) => {
         true,
         { appointment },
         null,
-        "Slot off created"
+        "Unvailable slot created"
       );
     } else {
       appointment = await Appointment.create({
         doctor: doctorId,
         patient: patientId,
-        date,
+        date: date.format("YYYY-MM-DD"),
         slot,
       });
-      await Patient.findByIdAndUpdate(patientId, {
-        $push: { appointments: appointment._id },
-      });
-      await Doctor.findByIdAndUpdate(doctor, {
-        $push: { appointments: appointment._id },
-      });
+      appointment = await appointment
+        .populate("doctor")
+        .populate("patient")
+        .execPopulate();
+      console.log(appointment);
+      await Patient.findByIdAndUpdate(
+        patientId,
+        {
+          $push: { appointments: appointment._id },
+        },
+        { new: true }
+      );
+
+      await Doctor.findByIdAndUpdate(
+        doctor,
+        {
+          $push: { appointments: appointment._id },
+        },
+        { new: true }
+      );
       utilsHelper.sendResponse(
         res,
         200,
         true,
         { appointment },
         null,
-        "Request appointment created"
+        "Request appointment created is not Paid"
       );
     }
 
@@ -70,18 +95,60 @@ appointmentController.requestAppointment = async (req, res, next) => {
   }
 };
 
+appointmentController.requestAppointment = async (req, res, next) => {
+  try {
+    let { status, appointmentId } = req.body;
+
+    let appointment = await Appointment.findById(appointmentId);
+    if (status === "COMPLETED") {
+      appointment = await Appointment.findByIdAndUpdate(
+        appointmentId,
+        { isPaid: true },
+        { new: true }
+      );
+      utilsHelper.sendResponse(
+        res,
+        200,
+        true,
+        { appointment },
+        null,
+        "Request appointment created"
+      );
+    } else {
+      await Appointment.findByIdAndDelete(appointmentId);
+      utilsHelper.sendResponse(
+        res,
+        200,
+        true,
+        null,
+        null,
+        "Request appointment fail"
+      );
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 appointmentController.acceptedAppointment = async (req, res, next) => {
   try {
-    const appointmentId = req.params.id;
+    let appointmentId = req.params.id;
     const doctorId = req.userId;
     let appointment = await Appointment.findById(appointmentId);
     if (!appointment)
       return next(new Error("401 - Appointment is no longer exist"));
-    if (doctorId !== appointment.doctor)
+    if (doctorId != appointment.doctor)
       next(new Error("401 - You are not authorized"));
-    appointmentId = await Appointment.findByIdAndUpdate(appointmentId, {
-      status: "accepted",
-    });
+
+    if (appointment.status != "request")
+      next(new Error("401 - This is not a request to be accepted"));
+    appointment = await Appointment.findByIdAndUpdate(
+      appointmentId,
+      {
+        status: "accepted",
+      },
+      { new: true }
+    );
 
     utilsHelper.sendResponse(
       res,
@@ -105,7 +172,7 @@ appointmentController.completedAppointment = async (req, res, next) => {
       return next(new Error("401 - Appointment is no longer exist"));
     if (doctorId !== appointment.doctor)
       next(new Error("401 - You are not authorized"));
-    appointmentId = await Appointment.findByIdAndUpdate(appointmentId, {
+    appointment = await Appointment.findByIdAndUpdate(appointmentId, {
       status: "completed",
       balance: balance + 500000,
     });
@@ -128,14 +195,14 @@ appointmentController.cancelAppointment = async (req, res, next) => {
     const appointmentId = req.params.id;
     const userId = req.userId;
     const { date } = req.body;
-    let currentDate = moment().get("date");
     let appointment = await Appointment.findById(appointmentId);
 
     if (!appointment) return next(new Error("401 - Appointment not found"));
-
+    if (appointment.status != "request" && appointment.status != "accepted")
+      return next(new Error("401 - You can not cancel this"));
     let patient = await Patient.findById(userId);
     let doctor = await Doctor.findById(userId);
-    const diffDay = currentDate.diff(date, "days"); //count the different day between the appointment and currenday
+    const diffDay = moment(appointment.date).diff(moment(date), "days"); //count the different day between the appointment and currenday
     if (!patient && !doctor) return next(new Error("401 - User not found"));
     if (patient) {
       //the patient can cancel
@@ -145,21 +212,29 @@ appointmentController.cancelAppointment = async (req, res, next) => {
       } else {
         await Appointment.findByIdAndUpdate(
           appointmentId,
-          { isDeleted: true },
+          { status: "cancel" },
           { new: true }
         );
-        await patient.update({ $inc: { balance: 100000 } }); //get back reservation fee
+        patient = await Patient.findByIdAndUpdate(
+          appointment.patient,
+          { $inc: { balance: 5 } },
+          { new: true }
+        ); //get back reservation fee
       }
     } else {
       //doctor can also cancel the appointment
       if (diffDay > 1) {
         await Appointment.findByIdAndUpdate(
           appointmentId,
-          { isDeleted: true },
+          { status: "cancel" },
           { new: true }
         );
-        patient = await Patient.findById(appointment.patient);
-        await patient.update({ $inc: { balance: 100000 } }); //get back reservation fee
+        patient = await Patient.findByIdAndUpdate(
+          appointment.patient,
+          { $inc: { balance: 5 } },
+          { new: true }
+        );
+        /* await patient.update({ $inc: { balance: 100000 } });  */ //get back reservation fee
       } else {
         //some punishment should be placed here}
       }
@@ -168,14 +243,40 @@ appointmentController.cancelAppointment = async (req, res, next) => {
       res,
       200,
       true,
+      { appointment },
       null,
-      null,
-      "Oppointment accepted"
+      "Appointment canceled"
     );
   } catch (error) {
     next(error);
   }
 };
+
+/* appointmentController.payReservationFeeAppointment = async (req, res, next) => {
+  try {
+    const appointmentId = req.params.id;
+    const patientId = req.userId;
+    let appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return next(new Error("401 - Appointment not found"));
+    if (patientId !== appointment.patient)
+      next(new Error("401 - You are not authorized"));
+    appointmentId = await Appointment.findByIdAndUpdate(appointmentId, {
+      status: "completed",
+      balance: balance + 5,
+    });
+
+    utilsHelper.sendResponse(
+      res,
+      200,
+      true,
+      { appointment },
+      null,
+      "Appointment accepted"
+    );
+  } catch (error) {
+    next(error);
+  }
+}; */
 
 appointmentController.getSingleAppointment = async (req, res, next) => {
   try {
@@ -192,6 +293,38 @@ appointmentController.getSingleAppointment = async (req, res, next) => {
       { appointment },
       null,
       "Get single appointment"
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+appointmentController.getAppointmentsByDate = async (req, res, next) => {
+  try {
+    let date = req.params.date;
+    let doctorId = req.params.id;
+    date = moment(date).subtract(1, "days");
+    let sevenDaysAppointments = {};
+    for (i = 1; i < 8; i++) {
+      console.log(i);
+      let currentDay = date.add(1, "days").format("YYYY-MM-DD");
+
+      console.log("currentDay", currentDay);
+      let appointment = await Appointment.find({
+        date: currentDay,
+        doctor: doctorId,
+      });
+
+      sevenDaysAppointments[`${currentDay}`] = appointment;
+    }
+    console.log(sevenDaysAppointments);
+    utilsHelper.sendResponse(
+      res,
+      200,
+      true,
+      { sevenDaysAppointments },
+      null,
+      "Get seven day appointment"
     );
   } catch (error) {
     next(error);

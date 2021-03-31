@@ -9,7 +9,10 @@ const patientController = {};
 patientController.getCurrentPatient = async (req, res, next) => {
   try {
     const patientId = req.userId;
-    const patient = await User.findById(patientId);
+    const patient = await Patient.findById(patientId).populate({
+      path: "appointments",
+      populate: "doctor",
+    });
     if (!patient) return next(new Error("401 - Patient not found"));
     utilsHelper.sendResponse(
       res,
@@ -27,23 +30,29 @@ patientController.getCurrentPatient = async (req, res, next) => {
 patientController.updateCurrentPatient = async (req, res, next) => {
   try {
     const patientId = req.userId;
-    let { name, dob, gender, parent, imageUrl } = req.body;
-    let { parentName, phone, email, password } = parent;
-    console.log(parentName);
-    let patient = await User.findById(patientId);
-    if (!patient) return next(new Error("401 - User not found"));
+    let {
+      parentName,
+      phone,
+      email,
+      childName,
+      dob,
+      gender,
+      avatarUrl,
+    } = req.body;
+    let patient = await Patient.findById(patientId);
+    if (!patient) return next(new Error("401 - Patient not found"));
 
-    const salt = await bcrypt.genSalt(10);
-    password = await bcrypt.hash(password, salt);
-
-    patient = await User.findByIdAndUpdate(
+    /* const salt = await bcrypt.genSalt(10);
+    password = await bcrypt.hash(password, salt); */
+    if (!avatarUrl) avatarUrl = patient.avatarUrl;
+    patient = await Patient.findByIdAndUpdate(
       patientId,
       {
-        name,
-        dob,
-        gender,
-        imageUrl,
-        parent: { parentName, phone, email, password },
+        parentName,
+        phone,
+        email,
+        avatarUrl,
+        children: { childName, dob, gender },
       },
       { new: true }
     );
