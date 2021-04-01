@@ -12,6 +12,7 @@ const router = express.Router();
 router.get(
   "/me",
   authMiddleware.loginRequired,
+  authMiddleware.patientRequired,
   patientController.getCurrentPatient
 );
 

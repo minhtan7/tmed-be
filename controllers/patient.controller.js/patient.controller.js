@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 
 const utilsHelper = require("../../helpers/utils.helper");
 const Patient = require("../../models/Patient");
+var moment = require("moment");
 
 const patientController = {};
 
@@ -39,7 +40,11 @@ patientController.updateCurrentPatient = async (req, res, next) => {
       gender,
       avatarUrl,
     } = req.body;
+    dob = moment(dob).format("YYYY-MM-DD");
     let patient = await Patient.findById(patientId);
+    if (!avatarUrl) {
+      avatarUrl = patient.avatarUrl;
+    }
     if (!patient) return next(new Error("401 - Patient not found"));
 
     /* const salt = await bcrypt.genSalt(10);
@@ -55,7 +60,7 @@ patientController.updateCurrentPatient = async (req, res, next) => {
         children: { childName, dob, gender },
       },
       { new: true }
-    );
+    ).populate({ path: "appointments", populate: "doctor" });
     utilsHelper.sendResponse(res, 200, true, { patient }, "Profile updated");
   } catch (err) {
     next(err);
@@ -91,7 +96,7 @@ patientController.updatePatient = async (req, res, next) => {
       userId,
       { name, email, password, role, phone, imageUrl },
       { new: true }
-    );
+    ).populate({ path: "appointments", populate: "doctor" });
     utilsHelper.sendResponse(res, 200, true, { patient }, `Update profile`);
   } catch (err) {
     next(err);

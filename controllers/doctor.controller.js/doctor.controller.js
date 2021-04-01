@@ -89,7 +89,6 @@ doctorController.getAllDoctors = async (req, res, next) => {
         doctors = await Doctor.find({})
           .skip(offset)
           .limit(limit)
-
           .lean()
           .populate("specialization", "name -_id")
           .populate("reviews");
@@ -206,7 +205,7 @@ doctorController.getDoctorMe = async (req, res, next) => {
     let { page, limit, search } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
-    const offset = limit * (page - 1);
+    let offset = limit * (page - 1);
     let totalAppointments = 0;
     let totalPages;
 
@@ -214,18 +213,20 @@ doctorController.getDoctorMe = async (req, res, next) => {
     let doctor = await Doctor.findById(doctorId);
     totalAppointments = doctor.appointments.length;
     totalPages = Math.ceil(totalAppointments / limit);
+    console.log("totalAppointments", totalAppointments);
+    console.log("totalPages", totalPages);
+    console.log("offset", offset);
 
     doctor = await Doctor.findById(doctorId)
-      .skip(offset)
-      .limit(limit)
       .populate("specialization", "name -_id")
       .populate("reviews");
-
     let appointmentIds = doctor.appointments.map((i) => i._id);
     let orderAppointments = await Appointment.aggregate([
       { $match: { _id: { $in: appointmentIds } } },
       { $sort: { date: -1 } },
-    ]);
+    ])
+      .skip(offset)
+      .limit(limit);
     doctor.appointments = orderAppointments;
     doctor = await doctor
       .populate("appointments")
@@ -242,10 +243,8 @@ doctorController.getDoctorMe = async (req, res, next) => {
           let isIncludes = a.patient.parentName
             .toLowerCase()
             .includes(search.toLowerCase());
-          console.log(isIncludes);
           if (isIncludes) {
             x.push(a);
-            console.log("push!");
           }
         }
       });
@@ -260,7 +259,7 @@ doctorController.getDoctorMe = async (req, res, next) => {
       res,
       200,
       true,
-      { doctor },
+      { doctor, totalPages },
       null,
       "Get single Doctor successfully"
     );

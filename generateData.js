@@ -42,9 +42,24 @@ const genderArray = [0, 1];
     balance: { type: Number, default: 0 },
     order: [{ type: Schema.Types.ObjectId, ref: "Order" }],
     isDeleted: { type: Boolean, default: false }, */
+const generateSpecialization = async () => {
+  const specializationsArray = [
+    "hematology",
+    "endocrinology",
+    "gastroenterology",
+    "pulmonology",
+    "rheumatology",
+    "cardiology",
+    "infectious diseases",
+    "pediatrician",
+  ];
+  for (let i = 0; i < specializationsArray.length; i++) {
+    await Specialization.create({ name: specializationsArray[i] });
+  }
+};
+/* generateSpecialization(); */
 
 const generatorDoctor = async (num) => {
-  await Doctor.collection.drop();
   const specializations = await Specialization.find();
   const doctorIDs = [];
   const degree = ["B.Med", "MD"];
@@ -103,8 +118,6 @@ const generatorDoctor = async (num) => {
 };
 
 const generatorPatient = async (num) => {
-  await Patient.collection.drop();
-
   const patientIDs = [];
   for (i = 0; i < num; i++) {
     const salt = await bcrypt.genSalt(10);
@@ -147,10 +160,12 @@ const generatorPatient = async (num) => {
 /* generatorPatient(5); */
 
 const generatePatientAndDoctor = async (num) => {
+  await Doctor.collection.drop();
+  await Patient.collection.drop();
   await Appointment.collection.drop();
   await Review.collection.drop();
-  let doctorIDs = await generatorDoctor(30);
-  let patientIDs = await generatorPatient(300);
+  let doctorIDs = await generatorDoctor(20);
+  let patientIDs = await generatorPatient(60);
   console.log("doctorIDs", doctorIDs);
   console.log("patiengIDs", patientIDs);
   const today = moment();
@@ -167,7 +182,7 @@ const generatePatientAndDoctor = async (num) => {
   }
 
   for (i = 0; i < num; i++) {
-    let date = faker.date.between("2021-03-29", "2021-04-11");
+    let date = faker.date.between("2021-04-02", "2021-04-11");
     date = moment(date).format("YYYY-MM-DD");
     let slot = faker.random.number(9);
     const status = ["request", "accepted", "cancel", "unavailable"];
@@ -206,7 +221,7 @@ const generatePatientAndDoctor = async (num) => {
   }
 };
 
-generatePatientAndDoctor(3000);
+generatePatientAndDoctor(1000);
 
 /* const folderPath = "./archive";
 const productPhotos = fs.readdirSync(folderPath);

@@ -121,4 +121,4 @@ const xx = moment().format("YYYY-MM-DD");
 console.log(typeof xx);
 const yy = moment(xx);
 console.log(yy);
-console.log(faker.image.lorempixel.business());
+console.log(faker.image.lorempixel.business(620));
