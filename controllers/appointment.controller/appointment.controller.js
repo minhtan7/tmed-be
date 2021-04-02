@@ -13,8 +13,10 @@ appointmentController.requestAppointmentIsPaidFalse = async (
   next
 ) => {
   try {
-    let { date, slot } = req.body;
+    let { date, slot, role } = req.body;
+
     date = moment(date);
+
     if (date.diff(moment(), "days") < 0)
       return next(new Error("401 - You can not request a previous day!"));
     let patientId = req.userId;
@@ -33,9 +35,14 @@ appointmentController.requestAppointmentIsPaidFalse = async (
         .populate("patient")
         .populate("doctor")
         .execPopulate();
-      await Doctor.findByIdAndUpdate(doctor, {
-        $push: { appointments: appointment._id },
-      });
+      let doctor = await Doctor.findByIdAndUpdate(
+        doctorId,
+        {
+          $push: { appointments: appointment._id },
+        },
+        { new: true }
+      );
+      console.log(doctor);
       utilsHelper.sendResponse(
         res,
         200,
@@ -44,7 +51,7 @@ appointmentController.requestAppointmentIsPaidFalse = async (
         null,
         "Unvailable slot created"
       );
-    } else {
+    } else if (role === "patient") {
       appointment = await Appointment.create({
         doctor: doctorId,
         patient: patientId,
@@ -55,7 +62,6 @@ appointmentController.requestAppointmentIsPaidFalse = async (
         .populate("doctor")
         .populate("patient")
         .execPopulate();
-      console.log(appointment);
       await Patient.findByIdAndUpdate(
         patientId,
         {
@@ -78,6 +84,15 @@ appointmentController.requestAppointmentIsPaidFalse = async (
         { appointment },
         null,
         "Request appointment created is not Paid"
+      );
+    } else {
+      utilsHelper.sendResponse(
+        res,
+        404,
+        false,
+        null,
+        null,
+        "You are not authorized"
       );
     }
 
@@ -306,10 +321,8 @@ appointmentController.getAppointmentsByDate = async (req, res, next) => {
     date = moment(date).subtract(1, "days");
     let sevenDaysAppointments = {};
     for (i = 1; i < 8; i++) {
-      console.log(i);
       let currentDay = date.add(1, "days").format("YYYY-MM-DD");
 
-      console.log("currentDay", currentDay);
       let appointment = await Appointment.find({
         date: currentDay,
         doctor: doctorId,
@@ -317,7 +330,7 @@ appointmentController.getAppointmentsByDate = async (req, res, next) => {
 
       sevenDaysAppointments[`${currentDay}`] = appointment;
     }
-    console.log(sevenDaysAppointments);
+
     utilsHelper.sendResponse(
       res,
       200,

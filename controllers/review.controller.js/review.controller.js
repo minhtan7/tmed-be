@@ -7,7 +7,7 @@ const reviewController = {};
 reviewController.addReview = async (req, res, next) => {
   try {
     const patientId = req.userId;
-    const { doctorId, title, body, rating } = req.body;
+    const { title, body, star, doctorId } = req.body;
     let review = await Review.findOne({ doctor: doctorId, patient: patientId });
     if (review) {
       return next(new Error("You have already reviewed this Doctor"));
@@ -17,7 +17,7 @@ reviewController.addReview = async (req, res, next) => {
       patient: patientId,
       title,
       body,
-      rating,
+      rating: star,
     });
     await Patient.findByIdAndUpdate(patientId, {
       $push: { reviews: review._id },
@@ -25,6 +25,7 @@ reviewController.addReview = async (req, res, next) => {
     await Doctor.findByIdAndUpdate(doctorId, {
       $push: { reviews: review._id },
     });
+
     utilsHelper.sendResponse(
       res,
       200,

@@ -156,7 +156,6 @@ doctorController.getAllDoctors = async (req, res, next) => {
           console.log("hee");
           sortDoctor.map((sD) => {
             doctors.map((d) => {
-              f;
               if (sD._id === d._id) {
                 d.avgRating = sD.avgRating;
                 console.log(sD.avgRating);
