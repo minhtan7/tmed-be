@@ -16,6 +16,44 @@ const doctorSchema = Schema(
     },
     balance: { type: Number, default: 0 },
     appointments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
+
+    availableDaySlot: [
+      {
+        date: {
+          type: String,
+          require: true,
+          enum: [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+          ],
+        },
+        shift: {
+          type: String,
+          require: true,
+          enum: [
+            "16:00-18:30",
+            "18:30-21:00",
+            "16:00-21:00",
+          ] /* unique: true  */,
+        },
+      },
+    ],
+    district: {
+      type: String,
+      required: true,
+      enum: [
+        "district-1",
+        "district-5",
+        "district-8",
+        "thu-duc-district",
+        "binh-thanh-district",
+      ],
+    },
     role: { type: String, default: "doctor" },
     profile: {
       gender: {

@@ -33,6 +33,7 @@ authMiddleware.doctorRequired = async (req, res, next) => {
   try {
     const userId = req.userId;
     const currentUser = await Doctor.findById(userId);
+    if (!currentUser) return next(new Error("401 - You are not authorized"));
     const isDoctor = currentUser.role === "doctor";
 
     if (!isDoctor) return next(new Error("401 - You are not authorized"));
@@ -49,7 +50,7 @@ authMiddleware.patientRequired = async (req, res, next) => {
     const userId = req.userId;
     console.log(userId);
     const currentUser = await Patient.findById(userId);
-    console.log(currentUser);
+    if (!currentUser) return next(new Error("401 - You are not authorized"));
     const isPatient = currentUser.role === "patient";
 
     if (!isPatient) return next(new Error("401 - You are not authorized"));

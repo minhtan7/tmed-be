@@ -299,7 +299,9 @@ appointmentController.getSingleAppointment = async (req, res, next) => {
     let appointment = await Appointment.findById(appointmentId);
     if (!appointment)
       return next(new Error("401 - Appointment is no longer exist"));
-    appointment = await Appointment.findById(appointmentId);
+    appointment = await Appointment.findById(appointmentId)
+      .populate("doctor")
+      .populate("patient");
 
     utilsHelper.sendResponse(
       res,

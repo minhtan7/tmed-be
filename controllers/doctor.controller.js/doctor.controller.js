@@ -10,7 +10,7 @@ const doctorController = {};
 //get all Doctors with filter and query
 doctorController.getAllDoctors = async (req, res, next) => {
   try {
-    let { page, limit, search, sortBy, gender, specializations } = req.query;
+    let { page, limit, search, sortBy, district, specializations } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
     const offset = limit * (page - 1);
@@ -20,7 +20,7 @@ doctorController.getAllDoctors = async (req, res, next) => {
     let r;
     let x;
     if (sortBy === "null") sortBy = "all";
-    if (gender === "null") gender = "all";
+    if (district === "null") district = "all";
     if (specializations === "null") specializations = "all";
     //--- calculate avg reviews rating
     /* await Doctor.aggregate(
@@ -78,11 +78,11 @@ doctorController.getAllDoctors = async (req, res, next) => {
         }
       );
     } else {
-      console.log(gender, specializations);
+      console.log(district, specializations);
       console.log(sortBy);
       let sortDoctor;
 
-      if (gender === "all" && specializations === "all") {
+      if (district === "all" && specializations === "all") {
         totalDoctors = await Doctor.find().countDocuments();
         totalPages = Math.ceil(totalDoctors / limit);
         const offset = limit * (page - 1);
@@ -92,31 +92,25 @@ doctorController.getAllDoctors = async (req, res, next) => {
           .lean()
           .populate("specialization", "name -_id")
           .populate("reviews");
-      } else if (gender != "all" && specializations != "all") {
+      } else if (district != "all" && specializations != "all") {
         x = await Specialization.findOne({ name: specializations });
         specializationsId = x._id;
         totalDoctors = await Doctor.find({
-          $and: [
-            { "profile.gender": gender },
-            { specialization: specializationsId },
-          ],
-        });
+          $and: [{ district: district }, { specialization: specializationsId }],
+        }).countDocuments();
         doctors = await Doctor.find({
-          $and: [
-            { "profile.gender": gender },
-            { specialization: specializationsId },
-          ],
+          $and: [{ district: district }, { specialization: specializationsId }],
         })
           .skip(offset)
           .limit(limit)
           .populate("specialization", "name -_id")
           .populate("reviews");
-      } else if (gender === "all") {
+      } else if (district === "all") {
         x = await Specialization.findOne({ name: specializations });
         specializationsId = x._id;
         totalDoctors = await Doctor.find({
           specialization: specializationsId,
-        });
+        }).countDocuments();
         doctors = await Doctor.find({
           specialization: specializationsId,
         })
@@ -126,10 +120,10 @@ doctorController.getAllDoctors = async (req, res, next) => {
           .populate("reviews");
       } else if (specializations === "all") {
         totalDoctors = await Doctor.find({
-          "profile.gender": gender,
-        });
-        doctors = await await Doctor.find({
-          "profile.gender": gender,
+          district,
+        }).countDocuments();
+        doctors = await Doctor.find({
+          district,
         })
           .skip(offset)
           .limit(limit)
@@ -166,6 +160,7 @@ doctorController.getAllDoctors = async (req, res, next) => {
           doctors = testDoc;
         }
       } else if (sortBy === "all") {
+        totalPages = Math.ceil(totalDoctors / limit);
         let doctorIds = doctors.map((i) => i._id);
         console.log("here");
         await Review.aggregate(
@@ -291,7 +286,6 @@ doctorController.getSingleDoctor = async (req, res, next) => {
       .populate("reviews")
       .populate({ path: "reviews", populate: "patient" });
     doctor = await doctor.toJSON();
-
     const test = await Review.aggregate([
       { $match: { doctor: mongoose.Types.ObjectId(doctorId) } },
       { $group: { _id: `$doctor`, avgRating: { $avg: "$rating" } } },
@@ -325,29 +319,55 @@ doctorController.updateDoctor = async (req, res, next) => {
       degree,
       address,
       about,
+      dayOfWeek,
     } = req.body;
     let doctor = await Doctor.findById(doctorId);
     if (!doctor) return next(new Error("401 - Doctor not found"));
-    const isEmailExist = await Doctor.findOne({ email });
-    if (isEmailExist) return next(new Error("401 - Email does exist"));
-    console.log(req.body);
-    /* const salt = await bcrypt.genSalt(10);
+    if (dayOfWeek) {
+      console.log(dayOfWeek);
+
+      let availableDaySlot = dayOfWeek
+        .filter((day) => day.shift != "")
+        .map((day) => {
+          return { date: day.date, shift: day.shift };
+        });
+      console.log(availableDaySlot);
+      doctor = await Doctor.findByIdAndUpdate(
+        doctorId,
+        {
+          availableDaySlot,
+        },
+        { new: true }
+      );
+      utilsHelper.sendResponse(
+        res,
+        200,
+        true,
+        { doctor },
+        `Update working hour`
+      );
+    } else {
+      const isEmailExist = await Doctor.findOne({ email });
+      if (isEmailExist) return next(new Error("401 - Email does exist"));
+      console.log(req.body);
+      /* const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(password, salt); */
-    specialization = await Specialization.findOne({ specialization })._id;
-    if (!avatarUrl) avatarUrl = doctor.avatarUrl;
-    doctor = await Doctor.findByIdAndUpdate(
-      doctorId,
-      {
-        name,
-        email,
-        phone,
-        avatarUrl,
-        specialization,
-        profile: { gender, degree, address, about },
-      },
-      { new: true }
-    );
-    utilsHelper.sendResponse(res, 200, true, { doctor }, `Update profile`);
+      specialization = await Specialization.findOne({ specialization })._id;
+      if (!avatarUrl) avatarUrl = doctor.avatarUrl;
+      doctor = await Doctor.findByIdAndUpdate(
+        doctorId,
+        {
+          name,
+          email,
+          phone,
+          avatarUrl,
+          specialization,
+          profile: { gender, degree, address, about },
+        },
+        { new: true }
+      );
+      utilsHelper.sendResponse(res, 200, true, { doctor }, `Update profile`);
+    }
   } catch (err) {
     next(err);
   }
