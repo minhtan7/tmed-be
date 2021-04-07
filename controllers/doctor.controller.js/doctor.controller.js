@@ -184,7 +184,7 @@ doctorController.getAllDoctors = async (req, res, next) => {
       res,
       200,
       true,
-      { doctors, totalPages },
+      { doctors, totalPages, totalDoctors },
       null,
       "Get Doctors success"
     );
