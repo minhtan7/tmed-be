@@ -99,7 +99,6 @@ const generatorDoctor = async (num) => {
   for (i = 0; i < num; i++) {
     const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash("123", salt);
-
     const user = {};
     user.gender = faker.random.arrayElement(genderArray);
     const firstName = faker.name.firstName(user.gender);
@@ -230,8 +229,8 @@ const generatorPatient = async (num) => {
 const generatePatientAndDoctor = async (num) => {
   await Doctor.collection.drop();
   await Patient.collection.drop();
-  /* await Appointment.collection.drop();
-  await Review.collection.drop(); */
+  await Appointment.collection.drop();
+  await Review.collection.drop();
   let doctorIDs = await generatorDoctor(20);
   let patientIDs = await generatorPatient(60);
   console.log("doctorIDs", doctorIDs);

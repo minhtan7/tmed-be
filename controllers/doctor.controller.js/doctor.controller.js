@@ -19,6 +19,7 @@ doctorController.getAllDoctors = async (req, res, next) => {
     let doctors;
     let r;
     let x;
+    console.log("req.body", req.query);
     if (sortBy === "null") sortBy = "all";
     if (district === "null") district = "all";
     if (specializations === "null") specializations = "all";
@@ -179,7 +180,7 @@ doctorController.getAllDoctors = async (req, res, next) => {
         );
       }
     }
-
+    console.log(doctors);
     utilsHelper.sendResponse(
       res,
       200,

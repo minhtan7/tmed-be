@@ -3,8 +3,10 @@ const Patient = require("../../models/Patient");
 const bcrypt = require("bcryptjs");
 const Doctor = require("../../models/Doctor");
 const Admin = require("../../models/Admin");
+const { emailInternalHelper } = require("../../helpers/email");
 
 const authController = {};
+
 authController.login = async ({ user }, res, next) => {
   try {
     if (user) {
@@ -62,7 +64,8 @@ authController.register = async (req, res, next) => {
     let doctor = await Doctor.findOne({ email });
     let patient = await Patient.findOne({ email });
     if (doctor || patient) return next(new Error("401 - Email already exits"));
-
+    const emailVerificationCode = utilsHelper.generateRandomHexString(20);
+    console.log(emailVerificationCode);
     if (req.body.role === "patient") {
       const salt = await bcrypt.genSalt(10);
       password = await bcrypt.hash(password, salt);
@@ -72,8 +75,21 @@ authController.register = async (req, res, next) => {
         phone,
         email,
         password,
+        emailVerificationCode,
       });
       const accessToken = await patient.generateToken();
+      const verificationURL = `${process.env.FRONTEND_URL}/verify?code=${emailVerificationCode}`;
+      const emailData = await emailInternalHelper.renderEmailTemplate(
+        "verify_email",
+        { name, code: verificationURL },
+        email
+      );
+
+      if (emailData.error) {
+        throw new Error(emailData.error);
+      } else {
+        emailHelper.send(emailData);
+      }
       utilsHelper.sendResponse(
         res,
         200,
@@ -91,8 +107,22 @@ authController.register = async (req, res, next) => {
         email,
         password,
         phone,
+        emailVerificationCode,
       });
       const accessToken = await doctor.generateToken();
+
+      const verificationURL = `${process.env.FRONTEND_URL}/verify?code=${emailVerificationCode}`;
+      const emailData = await emailInternalHelper.renderEmailTemplate(
+        "verify_email",
+        { name, code: verificationURL },
+        email
+      );
+
+      if (emailData.error) {
+        throw new Error(emailData.error);
+      } else {
+        emailInternalHelper.send(emailData);
+      }
       utilsHelper.sendResponse(
         res,
         200,
@@ -125,6 +155,24 @@ authController.registerAdmin = async (req, res, next) => {
       null,
       "Register successfully"
     );
+  } catch (err) {
+    next(err);
+  }
+};
+
+authController.verifyEmail = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    let doctor = await Doctor.findOne({ emailVerificationCode: code });
+
+    if (!doctor) throw new Error("Doctor hasn't register yet");
+    await Doctor.findOneAndUpdate(
+      { emailVerificationCode: code },
+      { emailVerified: true },
+      { new: true }
+    );
+
+    return utilsHelper.sendResponse(res, 200, true, null, null, "Verified");
   } catch (err) {
     next(err);
   }

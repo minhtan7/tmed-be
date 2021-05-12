@@ -12,6 +12,7 @@ const moment = require("moment");
 
 var indexRouter = require("./routes/index");
 const utilsHelper = require("./helpers/utils.helper");
+const { emailInternalHelper } = require("./helpers/email");
 
 var app = express();
 
@@ -23,7 +24,10 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then(() => console.log(`Mongoose connected to ${mongoURI}`))
+  .then(() => {
+    console.log(`Mongoose connected to ${mongoURI}`);
+    emailInternalHelper.createTemplatesIfNotExist();
+  })
   .catch((err) => console.log(err));
 
 app.use(logger("dev"));

@@ -2,6 +2,8 @@ const express = require("express");
 const authController = require("../controllers/auth.controller/auth.controller");
 const router = express.Router();
 const passport = require("passport");
+const validators = require("../middlewares/validation");
+const { body } = require("express-validator");
 
 router.post("/register/admin", authController.registerAdmin);
 
@@ -10,7 +12,11 @@ router.post("/register/admin", authController.registerAdmin);
  * @description User can register account
  * @access Public
  */
-router.post("/register", authController.register);
+router.post(
+  "/register",
+  validators.validate([body("email").isEmail(), body("password").isLength(6)]),
+  authController.register
+);
 
 /**
  * @route POST api/auth/login
@@ -36,5 +42,12 @@ router.post(
   passport.authenticate("facebook-token", { session: false }),
   authController.login
 );
+
+/**
+ * @route POST api/auth/verify
+ * @description User can verify email
+ * @access Public
+ */
+router.post("/verify", authController.verifyEmail);
 
 module.exports = router;

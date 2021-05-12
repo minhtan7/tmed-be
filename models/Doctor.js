@@ -45,7 +45,7 @@ const doctorSchema = Schema(
     ],
     district: {
       type: String,
-      required: true,
+      /* required: true, */
       enum: [
         "district-1",
         "district-5",
@@ -73,6 +73,8 @@ const doctorSchema = Schema(
     },
     reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
     isDeleted: { type: Boolean, default: false },
+    emailVerificationCode: { type: String, select: false },
+    emailVerified: { type: Boolean, require: true, default: false },
   },
   { timestamps: true }
 );
