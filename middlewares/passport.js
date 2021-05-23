@@ -57,13 +57,13 @@ passport.use(
     function (_, _, profile, done) {
       Patient.findOrCreate(
         {
-          googleId: profile.id,
-          name: profile.displayName,
-          email: profile.emails[0].value,
-          avatarUrl: profile._json.picture,
+          facebookId: profile.userID,
+          name: profile.name,
+          email: profile.email,
+          /* avatarUrl: profile.picture, */
         },
-        function (err, user) {
-          return done(err, user);
+        function (error, user) {
+          return done(error, user);
         }
       );
     }
@@ -79,10 +79,10 @@ passport.use(
     function (_, _, profile, done) {
       Patient.findOrCreate(
         {
-          googleId: profile.id,
-          name: profile.displayName,
-          email: profile.emails[0].value,
-          avatarUrl: profile._json.picture,
+          googleId: profile.googleId,
+          name: profile.profileObj.name,
+          email: profile.profileObj.email,
+          avatarUrl: profile.profileObj.imageUrl,
         },
         function (err, user) {
           return done(err, user);
