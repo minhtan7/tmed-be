@@ -55,6 +55,7 @@ passport.use(
       clientSecret: FACEBOOK_APP_SECRET,
     },
     function (_, _, profile, done) {
+      console.log("profile", profile);
       Patient.findOrCreate(
         {
           facebookId: profile.userID,
@@ -77,6 +78,7 @@ passport.use(
       clientSecret: GOOGLE_CLIENT_SECRET,
     },
     function (_, _, profile, done) {
+      console.log("profile", profile);
       Patient.findOrCreate(
         {
           googleId: profile.googleId,
