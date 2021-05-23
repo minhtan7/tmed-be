@@ -63,9 +63,9 @@ patientSchema.statics.findOrCreate = function findOrCreate(profile, cb) {
       patientObj.parentName = profile.name;
       patientObj.email = profile.email;
       patientObj.password = newPassword;
-      patientObj.googleId = profile.googleId;
-      patientObj.facebookId = profile.facebookId;
-      patientObj.avatarUrl = profile.avatarUrl;
+      if (profile.googleId) patientObj.googleId = profile.googleId;
+      if (profile.facebookId) patientObj.facebookId = profile.facebookId;
+      if (profile.avatarUrl) patientObj.avatarUrl = profile.avatarUrl;
       patientObj.save(cb);
     } else {
       cb(err, result);
