@@ -9,6 +9,7 @@ const authController = {};
 
 authController.login = async ({ user }, res, next) => {
   try {
+    console.log("user", user);
     if (user) {
       if (user.role === "patient") {
         const patient = await Patient.findByIdAndUpdate(
