@@ -1,11 +1,12 @@
-# TMED - Doctor Appointment Booking
+# TMED - Doctor Appointment Booking | Back end
 ![demo](https://img.shields.io/badge/demo-live-brightgreen)
 
 TMED is a doctor appointment booking website designed specifically for doctors and patients up to ten years old. The platform enables users to easily manage appointments and access various features tailored for both doctors and patients.
 
-**Demo links**: [TMED](https://tmed.netlify.app)
+### Demo link: [TMED](https://tmed.netlify.app)
 
-**Table of content:**
+### Table of content:
+- [Repositories](#Repositories)
 - [Features](#Features)
     - [General Features](#General-Features)
     - [Doctor Perspective Features](#Doctor-Perspective-Features)
@@ -17,6 +18,10 @@ TMED is a doctor appointment booking website designed specifically for doctors a
     - [As a doctor](#As-a-doctor)
 - [Future Features](#Future-Features)
 - [Demo Screenshots and GIFs](#Demo-Screenshots-and-GIFs)
+
+## Repositories
+- **Frontend:** [Frontend Repository](https://github.com/minhtan7/tmed-fe)
+- **Backend:** [Backend Repository](https://github.com/minhtan7/tmed-be)
 
 ## Features
 ### General Features
@@ -66,4 +71,3 @@ TMED is built using the following technologies:
 - **Customizable Profiles**: Allow doctors to create customizable profiles, showcasing their qualifications, experience, areas of expertise, and other relevant information.
 
 ## Demo Screenshots and GIFs
-To be Updated
