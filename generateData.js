@@ -128,7 +128,6 @@ const generatorDoctor = async (num) => {
       a = availableDaysOf[a];
       console.log(availableDaysOf[a]);
     }); */
-    console.log(availableDays);
     /* 
     for (i = 0; i < 3; i++) {
       let shift = faker.random.arrayElements(shifts, faker.random.number(2));
