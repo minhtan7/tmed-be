@@ -137,7 +137,6 @@ const generatorDoctor = async (num) => {
     let day_2_shift = faker.random.arrayElement(shifts, 1);
     let day_3_shift = faker.random.arrayElement(shifts, 1);
     let y = [day_1_shift, day_2_shift, day_3_shift];
-    console.log(y);
     let x = {};
     let m = {};
     let n = {};
